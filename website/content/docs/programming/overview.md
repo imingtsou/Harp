@@ -2,6 +2,8 @@
 title: Harp Overview
 ---
 
+![Overview-0](/img/harp-overview.png)
+
 ## Big Model Problems and The Limitation of Existing Tools:
 
 Data analytics is undergoing a revolution in many scientific domains. Machine learning becomes a popular method for analytics for which it allows computers to learn from the existing data and make predictions based off it. They have been widely used in computer vision, text mining, advertising, recommender systems, network analysis and genetics. Unfortunately, analyzing such huge data usually exceeds the capability of a single or even a few machines owing to the incredible volume of data available, and thus requires algorithm parallelization at an unprecedented scale. Scaling up these algorithms is challenging because of their prohibitive computation cost, not only the need to process enormous training data in iterations, but also the requirement to synchronize big model in rounds for algorithm convergence. The problem is simply referred as "the big model problem of big data machine learning".
@@ -16,33 +18,13 @@ To solve the problems mentioned above, the Harp’s approach is to use collectiv
 
 With the Harp framework, the project focuses on building a machine learning library with the programming interfaces provided. Our research shows parallel machine learning applications can be categorized to four types of computation models. The classification of the computation models is based on the synchronization patterns and the effectiveness of the model parameter update. These computation models are mapped to the Harp programming interfaces to simplify the programming of machine learning applications. In sum, the Harp’s contribution includes:
 
-1. Harp provides a collective communication library as a Hadoop plug-in and a set of Map-Collective programming interfaces to develop iterative machine learning applications with various synchronization patterns.
+* Harp provides a collective communication library as a Hadoop plug-in and a set of Map-Collective programming interfaces to develop iterative machine learning applications with various synchronization patterns.
 
-2. Four parallel computation models are categorized to characterize the parallelization of machine learning applications. “Allreduce” and “Rotation” based Computation models can be mapped to the Harp collective communication interfaces in order to simplify the implementation of parallel machine learning applications.
+* Four parallel computation models are categorized to characterize the parallelization of machine learning applications. “Allreduce” and “Rotation” based Computation models can be mapped to the Harp collective communication interfaces in order to simplify the implementation of parallel machine learning applications.
 
-Now several machine learning algorithms are implemented, including K-means Clustering, Multiclass Logistic Regression (MLR), Support Vector Machine (SVM), Latent Dirichlet Allocation (LDA) and Matrix Factorization (MF).  Our experiment results of LDA implementations reveal that the "Rotation" based computation model is faster than the “Allreduce” type computation model. Now three algorithms are built on top of model rotation: Collapsed Gibbs Sampling (CGS) for LDA, Stochastic Gradient Descent (SGD) and Cyclic Coordinate Descent (CCD) for MF. The performance results on an Intel Haswell cluster show that our solution achieves faster model convergence speed and higher scalability compared with other contemporary work.
+A collection of machine learning algorithms are implemented, including K-means Clustering, Multiclass Logistic Regression (MLR), Support Vector Machine (SVM), Latent Dirichlet Allocation (LDA) and Matrix Factorization (MF).  Our experiment results of LDA implementations reveal that the "Rotation" based computation model is faster than the “Allreduce” type computation model. Now three algorithms are built on top of model rotation: Collapsed Gibbs Sampling (CGS) for LDA, Stochastic Gradient Descent (SGD) and Cyclic Coordinate Descent (CCD) for MF. The performance results on an Intel Haswell cluster show that our solution achieves faster model convergence speed and higher scalability compared with other related work.
 
-![Overview-1](/img/2-1-1.png)
 
-![Overview-2](/img/2-1-2.png)
-
-![Overview-3](/img/2-1-3.png)
-
-![Overview-4](/img/2-1-4.png)
-
-<table>
-	<tr>
-		<td>
-			<img src=/harp/img/2-1-5.png border=0>
-		</td>
-		<td>
-			<img src=/harp/img/2-1-6.png border=0>
-		</td>
-		<td>
-			<img src=/harp/img/2-1-7.png border=0>
-		</td>
-	</tr>
-</table>
 
 
 

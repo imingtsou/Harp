@@ -27,7 +27,7 @@ public class KmeansMapCollective extends Configured implements Tool {
 
 	@Override
 	public int run(String[] args) throws Exception {
-		if (args.length < 6) {
+		if (args.length < 7) {
 			System.err.println("Usage: KmeansMapCollective <numOfDataPoints> <num of Centroids> "
 					+ "<size of vector> <number of map tasks> <number of iteration> <workDir> <localDir>\n");
 			ToolRunner.printGenericCommandUsage(System.err);

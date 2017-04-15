@@ -76,11 +76,14 @@ public class MBKmeansMapper  extends CollectiveMapper<String, String, LongWritab
         LOG.info("Loaded "+ dataList.size()+" data points in total");
         //2. generate initial centroids
         Table<DoubleArray> cenTable = new Table<>(0, new DoubleArrPlus());
-        initCentroids(cenTable, dataList, dimension);
+
+        if( this.isMaster()){
+            initCentroids(cenTable, dataList, dimension);
+        }
 
         //print table for testing
         if(DEBUG) printTable(cenTable);
-
+        /*
         //3. do iterations
         for(int iter = 0; iter < iterations; ++iter){
 
@@ -150,7 +153,7 @@ public class MBKmeansMapper  extends CollectiveMapper<String, String, LongWritab
         if( this.isMaster()){
             outputCentroids(cenTable,  conf,   context);
         }
-
+        */
     }
 
     /**
@@ -261,24 +264,8 @@ public class MBKmeansMapper  extends CollectiveMapper<String, String, LongWritab
      * @param dataList
      */
     private void initCentroids(Table<DoubleArray> cenTable, List<double[]> dataList, int dimension){
-        //calculate initial centroids size and the start centroid id in this node.
-        int mod = numOfCentroids % numMapTasks;
-        int initCentroidSize = numOfCentroids / numMapTasks;
-        int startCentroidId = 0;
-        if (mod != 0){
-            if (this.getSelfID() < mod){
-                ++initCentroidSize;
-                startCentroidId = this.getSelfID() * initCentroidSize;
-            }else{
-                startCentroidId = mod * (initCentroidSize + 1) + (this.getSelfID() - mod) * initCentroidSize;
-            }
-        }else{
-            startCentroidId = this.getSelfID() * initCentroidSize;
-        }
-        int centroidId = startCentroidId;
-
         //randomly pick from dataset.
-        for( int i = 0; i < initCentroidSize; i++){
+        for( int i = 0; i < numOfCentroids; i++){
             int c = rand.nextInt(dataList.size());
             double[] copy = Arrays.copyOf(dataList.get(c), dimension+1);
             Partition<DoubleArray> ap = new Partition<DoubleArray>(centroidId, new DoubleArray(copy, 0, dimension+1));

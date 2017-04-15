@@ -115,7 +115,12 @@ public class MBKmeansMapper  extends CollectiveMapper<String, String, LongWritab
                 apInCenTable.get().get()[dimension] += 1;
             }
             LOG.info("[DONE] Find nearest centroids");
+
+            printTable(cenTable);
+
             allreduce("main", "allreduce_"+iter, cenTable);
+
+            printTable(cenTable);
 
             for( Partition<DoubleArray> partition: cenTable.getPartitions()){
                 double previousV = previousCenTable.getPartition(partition.id()).get().get()[dimension];

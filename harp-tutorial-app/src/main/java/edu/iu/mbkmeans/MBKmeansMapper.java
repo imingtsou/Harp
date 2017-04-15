@@ -83,6 +83,11 @@ public class MBKmeansMapper  extends CollectiveMapper<String, String, LongWritab
 
         //print table for testing
         if(DEBUG) printTable(cenTable);
+
+        broadcastCentroids(cenTable);
+
+        printTable(cenTable);
+
         /*
         //3. do iterations
         for(int iter = 0; iter < iterations; ++iter){
@@ -168,6 +173,19 @@ public class MBKmeansMapper  extends CollectiveMapper<String, String, LongWritab
             for(int i=0; i<res.length;i++)
                 System.out.print(res[i]+"\t");
             System.out.println();
+        }
+    }
+
+    private void broadcastCentroids( Table<DoubleArray> cenTable) throws IOException{  
+        //broadcast centroids 
+        boolean isSuccess = false;
+        try {
+            isSuccess = broadcast("main", "broadcast-centroids", cenTable, this.getMasterID(),false);
+        } catch (Exception e) {
+            LOG.error("Fail to bcast.", e);
+        }
+        if (!isSuccess) {
+            throw new IOException("Fail to bcast");
         }
     }
 

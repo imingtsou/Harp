@@ -118,10 +118,10 @@ public class MBKmeansMapper  extends CollectiveMapper<String, String, LongWritab
             allreduce("main", "allreduce_"+iter, cenTable);
 
             for( Partition<DoubleArray> partition: cenTable.getPartitions()){
-                previousV = previousCenTable.getPartition(partition.id()).get().get()[dimension];
+                double previousV = previousCenTable.getPartition(partition.id()).get().get()[dimension];
                 partition.get().get()[dimension] += previousV;
-                v = partition.get().get()[dimension];
-                previousPartition = previousCenTable.getPartition(partition.id());
+                double v = partition.get().get()[dimension];
+                Partition<DoubleArray> previousPartition = previousCenTable.getPartition(partition.id());
                 for (int i = 0;i < dimension;i++) {
                     partition.get().get()[i] = (previousPartition.get().get()[i] * previousV + partition.get().get()[i]) / v;
                 }

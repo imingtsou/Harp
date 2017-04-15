@@ -1,9 +1,11 @@
 package edu.iu.mbkmeans;
 
 import edu.iu.harp.example.DoubleArrPlus;
+import edu.iu.harp.example.IntArrPlus;
 import edu.iu.harp.partition.Partition;
 import edu.iu.harp.partition.Table;
 import edu.iu.harp.resource.DoubleArray;
+import edu.iu.harp.resource.IntArray;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -76,6 +78,7 @@ public class MBKmeansMapper  extends CollectiveMapper<String, String, LongWritab
         LOG.info("Loaded "+ dataList.size()+" data points in total");
         //2. generate initial centroids
         Table<DoubleArray> cenTable = new Table<>(0, new DoubleArrPlus());
+        Table<DoubleArray> previousCenTable =  null;
 
         if( this.isMaster()){
             initCentroids(cenTable, dataList, dimension);
@@ -86,12 +89,10 @@ public class MBKmeansMapper  extends CollectiveMapper<String, String, LongWritab
 
         broadcastCentroids(cenTable);
 
-        printTable(cenTable);
-
-        /*
         //3. do iterations
         for(int iter = 0; iter < iterations; ++iter){
 
+            previousCenTable =  cenTable;
             // 3.1 randomly pick localBatchSize of dataset
             int[] dataSampleIds = new int[localBatchSize];
             for( int i = 0; i < localBatchSize; i++) {
@@ -101,64 +102,35 @@ public class MBKmeansMapper  extends CollectiveMapper<String, String, LongWritab
             int[] cachedCentroids = new int[localBatchSize];
             double[] cachedDistance = new double[localBatchSize];
             //initialize cachedDistance
-            for(int j = 0; j < localBatchSize; ++j) cachedDistance[j] = Double.MAX_VALUE;
+            for(int i = 0; i < localBatchSize; ++i) cachedDistance[i] = Double.MAX_VALUE;
 
-            // rotate and for-loop to calculate the nearest centroids for each x in dataSamples.
-            int rotationNo = 0;
-            do {//do rotation
-                LOG.info("Updating the nearest centroid for all data samples");
-
-                for( int i = 0; i < localBatchSize; i++) {
-                    updateNearestCentroid(i, dataSampleIds,cachedCentroids, cachedDistance, cenTable, dataList);
+            // calculate the nearest centroids for each x in dataSamples.
+            LOG.info("Updating the nearest centroid for all data samples");
+            for( int i = 0; i < localBatchSize; i++) {
+                updateNearestCentroid(i, dataSampleIds,cachedCentroids, cachedDistance, cenTable, dataList);
+                Partition<DoubleArray> apInCenTable = cenTable.getPartition(cachedCentroids[i]);
+                for(int j=0; j < dimension; j++){
+                    apInCenTable.get().get()[j] += dataList.get(i)[j];
                 }
-
-                LOG.info("[BEGIN] rotation " + rotationNo);
-                rotate ("MBKmeans-nearestCentroids","rotation"+rotationNo, cenTable, null);
-                LOG.info("[END] rotation " + rotationNo);
-                ++rotationNo;
-            }while(rotationNo < numMapTasks);
+                apInCenTable.get().get()[dimension] += 1;
+            }
             LOG.info("[DONE] Find nearest centroids");
+            allreduce("main", "allreduce_"+iter, cenTable);
 
-            rotationNo = 0;
-            Map<Integer, List<Integer>> map = invertedIndex(dataSampleIds, cachedCentroids);
-
-            //print the map size
-            if(DEBUG) {
-                System.out.println("output the inverted index");
-                for (Map.Entry<Integer, List<Integer>> entry : map.entrySet()) {
-                    System.out.println(entry.getKey() + "\t" + entry.getValue().size());
+            for( Partition<DoubleArray> partition: cenTable.getPartitions()){
+                previousV = previousCenTable.getPartition(partition.id()).get().get()[dimension];
+                partition.get().get()[dimension] += previousV;
+                v = partition.get().get()[dimension];
+                previousPartition = previousCenTable.getPartition(partition.id());
+                for (int i = 0;i < dimension;i++) {
+                    partition.get().get()[i] = (previousPartition.get().get()[i] * previousV + partition.get().get()[i]) / v;
                 }
             }
-
-            do {//do rotation
-                LOG.info("Updating centroids in cenTable");
-                for( Partition<DoubleArray> partition: cenTable.getPartitions()){
-                    int cenId = partition.id();
-                    double[] centroid = partition.get().get();
-                    if( map.containsKey(cenId)) {
-                        List data = map.get(cenId);
-                        for( int j = 0; j < data.size(); j++){
-                            ++centroid[dimension];                // Update per-center counts
-                            double eta = 1 / centroid[dimension]; //per-center learning rate
-                            gradientStep(centroid, dataList.get(dataSampleIds[j]), eta);             // Take gradient step
-                        }
-                    }
-                }
-
-                LOG.info("[BEGIN] rotation " + rotationNo);
-                rotate ("MBKmeans-updateCentroids","rotation"+rotationNo, cenTable, null);
-                LOG.info("[END] rotation " + rotationNo);
-                ++rotationNo;
-            }while(rotationNo < numMapTasks);
-
-            LOG.info("[DONE] iteration " + iter);
         }
 
-        allgather("MBKmeans-gatherCentroids", "allgather", cenTable);
         if( this.isMaster()){
             outputCentroids(cenTable,  conf,   context);
         }
-        */
     }
 
     /**

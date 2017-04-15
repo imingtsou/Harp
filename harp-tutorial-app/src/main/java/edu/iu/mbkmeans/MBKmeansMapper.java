@@ -265,6 +265,7 @@ public class MBKmeansMapper  extends CollectiveMapper<String, String, LongWritab
      */
     private void initCentroids(Table<DoubleArray> cenTable, List<double[]> dataList, int dimension){
         //randomly pick from dataset.
+        int centroidId = 0;
         for( int i = 0; i < numOfCentroids; i++){
             int c = rand.nextInt(dataList.size());
             double[] copy = Arrays.copyOf(dataList.get(c), dimension+1);

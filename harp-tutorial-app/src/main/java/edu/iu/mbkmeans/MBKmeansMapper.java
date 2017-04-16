@@ -93,6 +93,7 @@ public class MBKmeansMapper  extends CollectiveMapper<String, String, LongWritab
         for(int iter = 0; iter < iterations; ++iter){
 
             previousCenTable =  cenTable;
+            cenTable = new Table<>(0, new DoubleArrPlus());
             // 3.1 randomly pick localBatchSize of dataset
             int[] dataSampleIds = new int[localBatchSize];
             for( int i = 0; i < localBatchSize; i++) {

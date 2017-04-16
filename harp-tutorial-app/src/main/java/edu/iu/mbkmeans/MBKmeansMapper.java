@@ -108,7 +108,7 @@ public class MBKmeansMapper  extends CollectiveMapper<String, String, LongWritab
             // calculate the nearest centroids for each x in dataSamples.
             LOG.info("Updating the nearest centroid for all data samples");
             for( int i = 0; i < localBatchSize; i++) {
-                updateNearestCentroid(i, dataSampleIds,cachedCentroids, cachedDistance, cenTable, dataList);
+                updateNearestCentroid(i, dataSampleIds,cachedCentroids, cachedDistance, previousCenTable, dataList);
                 Partition<DoubleArray> apInCenTable = cenTable.getPartition(cachedCentroids[i]);
                 double[] partial = new double[dimension + 1];
                 for (int j = 0; j < dimension; j++) {

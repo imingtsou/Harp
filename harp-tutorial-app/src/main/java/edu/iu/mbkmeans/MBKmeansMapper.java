@@ -110,10 +110,20 @@ public class MBKmeansMapper  extends CollectiveMapper<String, String, LongWritab
             for( int i = 0; i < localBatchSize; i++) {
                 updateNearestCentroid(i, dataSampleIds,cachedCentroids, cachedDistance, cenTable, dataList);
                 Partition<DoubleArray> apInCenTable = cenTable.getPartition(cachedCentroids[i]);
-                for(int j=0; j < dimension; j++){
-                    apInCenTable.get().get()[j] += dataList.get(i)[j];
+                double[] partial = new double[dimension + 1];
+                for (int j = 0; j < dimension; j++) {
+                    partial[j] = dataList.get(i)[j];
                 }
-                apInCenTable.get().get()[dimension] += 1;
+                partial[dimension] = 1;
+                if (apInCenTable == null) {
+                    Partition<DoubleArray> tmpAp = new Partition<DoubleArray>(cachedCentroids[i], new DoubleArray(partial, 0, dimension + 1));
+                    cenTable.addPartition(tmpAp);
+                }
+                else {
+                    for (int j = 0; j < dimension + 1; j++) {
+                        apInCenTable.get().get()[j] += partial[j];
+                    }
+                }
             }
             LOG.info("[DONE] Find nearest centroids");
 
